@@ -3,53 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cetak Kartu KIS - Visual Editor</title>
+  <title>Cetak Kartu Indonesia Sehat</title>
 
-  <!-- Library pdf-lib untuk isi PDF -->
+  <!-- Library pdf-lib & fontkit untuk custom font Arial -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <!-- Library bwip-js untuk Barcode Garis -->
+  <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+  <!-- Library bwip-js untuk Barcode -->
   <script src="https://cdn.jsdelivr.net/npm/bwip-js@3.0.4/dist/bwip-js-min.js"></script>
-  <!-- Library PDF.js untuk Render Template PDF ke Background Canvas Preview -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f0f2f5;
-      color: #333;
-    }
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .form-section {
-      flex: 1;
-      min-width: 320px;
-      background: white;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      max-width: 480px;
+      margin: 30px auto;
+      padding: 25px;
+      background-color: #f4f6f9;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    .preview-section {
-      flex: 1.2;
-      min-width: 350px;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h2 { margin-top: 0; color: #00875a; font-size: 20px; }
+    h2 { text-align: center; color: #00875a; margin-bottom: 20px; }
     .form-group { margin-bottom: 12px; }
-    label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 13px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; color: #333; font-size: 14px; }
     input[type="text"] {
       width: 100%;
       padding: 8px 10px;
@@ -57,7 +32,7 @@
       border-radius: 4px;
       font-size: 14px;
     }
-    .btn {
+    button {
       width: 100%;
       padding: 12px;
       background-color: #00875a;
@@ -69,291 +44,133 @@
       cursor: pointer;
       margin-top: 10px;
     }
-    .btn:hover { background-color: #006644; }
-    
-    /* Area Preview Editor */
-    #cardContainer {
-      position: relative;
-      width: 450px;
-      height: 283px;
-      border: 2px solid #00875a;
-      border-radius: 6px;
-      margin-top: 10px;
-      overflow: hidden;
-      user-select: none;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    /* Canvas Background PDF */
-    #pdfBgCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-    .draggable {
-      position: absolute;
-      cursor: move;
-      font-family: Arial, sans-serif;
-      font-weight: bold;
-      color: #000;
-      white-space: nowrap;
-      padding: 1px 3px;
-      border: 1px dashed transparent;
-      z-index: 10;
-    }
-    .draggable:hover {
-      border-color: #007bff;
-      background: rgba(0, 123, 255, 0.2);
-    }
-    #drag-barcode img {
-      display: block;
-      pointer-events: none;
-    }
-    .info-text {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    #status { margin-top: 10px; font-weight: bold; }
+    button:hover { background-color: #006644; }
+    #status { margin-top: 15px; text-align: center; font-weight: bold; }
     #barcodeCanvas { display: none; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- FORM INPUT -->
-    <div class="form-section">
-      <h2>1. Isi Data Kartu</h2>
-      <div class="form-group">
-        <label for="noKartu">Nomor Kartu (Barcode):</label>
-        <input type="text" id="noKartu" value="0001031973028" oninput="updatePreview()">
-      </div>
-      <div class="form-group">
-        <label for="nama">Nama Lengkap:</label>
-        <input type="text" id="nama" value="TARYANTO" oninput="updatePreview()">
-      </div>
-      <div class="form-group">
-        <label for="alamat">Alamat:</label>
-        <input type="text" id="alamat" value="RANDEGAN 04/03 RANDEGAN, LOSARI" oninput="updatePreview()">
-      </div>
-      <div class="form-group">
-        <label for="tglLahir">Tanggal Lahir:</label>
-        <input type="text" id="tglLahir" value="27-08-1952" oninput="updatePreview()">
-      </div>
-      <div class="form-group">
-        <label for="nik">NIK:</label>
-        <input type="text" id="nik" value="33291722708520002" oninput="updatePreview()">
-      </div>
-      <div class="form-group">
-        <label for="faskes">Faskes Tingkat I:</label>
-        <input type="text" id="faskes" value="Bojongsari" oninput="updatePreview()">
-      </div>
+  <h2>Form Cetak Kartu KIS</h2>
 
-      <button class="btn" onclick="generatePDF()">2. Cetak Kartu PDF</button>
-      <div id="status"></div>
+  <form id="cardForm">
+    <div class="form-group">
+      <label for="noKartu">Nomor Kartu (Barcode):</label>
+      <input type="text" id="noKartu" value="0001031973028" placeholder="Contoh: 0001031973028" required>
     </div>
 
-    <!-- PREVIEW EDITOR -->
-    <div class="preview-section">
-      <h2>Preview & Posisi Teks</h2>
-      <p class="info-text">💡 <b>Geser (Drag)</b> posisi teks di atas template PDF agar pas dengan garis/kolom.</p>
-
-      <div id="cardContainer">
-        <!-- Background Render dari template.pdf -->
-        <canvas id="pdfBgCanvas"></canvas>
-
-        <!-- Elemen yang Bisa Digeser -->
-        <div id="drag-noKartu" class="draggable" style="left: 140px; top: 75px; font-size: 12px;">0001031973028</div>
-        <div id="drag-nama" class="draggable" style="left: 140px; top: 95px; font-size: 12px;">TARYANTO</div>
-        <div id="drag-alamat" class="draggable" style="left: 140px; top: 115px; font-size: 9px;">RANDEGAN 04/03 RANDEGAN, LOSARI</div>
-        <div id="drag-tglLahir" class="draggable" style="left: 140px; top: 135px; font-size: 10px;">27-08-1952</div>
-        <div id="drag-nik" class="draggable" style="left: 140px; top: 155px; font-size: 10px;">33291722708520002</div>
-        <div id="drag-faskes" class="draggable" style="left: 140px; top: 175px; font-size: 10px;">Bojongsari</div>
-        <div id="drag-barcode" class="draggable" style="left: 140px; top: 200px;">
-          <img id="barcodeImgPreview" src="" alt="Barcode">
-        </div>
-      </div>
+    <div class="form-group">
+      <label for="nama">Nama Lengkap:</label>
+      <input type="text" id="nama" value="TARYANTO" placeholder="Contoh: TARYANTO" required>
     </div>
-  </div>
 
+    <div class="form-group">
+      <label for="alamat">Alamat:</label>
+      <input type="text" id="alamat" value="RANDEGAN 04/03 RANDEGAN, LOSARI" placeholder="Contoh: RANDEGAN 04/03 RANDEGAN, LOSARI" required>
+    </div>
+
+    <div class="form-group">
+      <label for="tglLahir">Tanggal Lahir:</label>
+      <input type="text" id="tglLahir" value="27-08-1952" placeholder="Contoh: 27-08-1952" required>
+    </div>
+
+    <div class="form-group">
+      <label for="nik">NIK:</label>
+      <input type="text" id="nik" value="33291722708520002" placeholder="Contoh: 33291722708520002" required>
+    </div>
+
+    <div class="form-group">
+      <label for="faskes">Faskes Tingkat I:</label>
+      <input type="text" id="faskes" value="Bojongsari" placeholder="Contoh: Bojongsari" required>
+    </div>
+
+    <button type="button" onclick="generatePDF()">Cetak Kartu PDF</button>
+  </form>
+
+  <div id="status"></div>
   <canvas id="barcodeCanvas"></canvas>
 
   <script>
-    // Konfigurasi Worker PDF.js
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-    window.onload = async function() {
-      makeDraggable();
-      updatePreview();
-      await loadPdfTemplateBackground();
-    };
-
-    // Render template.pdf langsung sebagai background preview
-    async function loadPdfTemplateBackground() {
-      const statusDiv = document.getElementById('status');
-      try {
-        const loadingTask = pdfjsLib.getDocument('./template.pdf');
-        const pdf = await loadingTask.promise;
-        const page = await pdf.getPage(1);
-
-        const container = document.getElementById('cardContainer');
-        const canvas = document.getElementById('pdfBgCanvas');
-        const context = canvas.getContext('2d');
-
-        // Menyesuaikan skala render dengan ukuran container (450px)
-        const unscaledViewport = page.getViewport({ scale: 1 });
-        const scale = container.clientWidth / unscaledViewport.width;
-        const viewport = page.getViewport({ scale: scale });
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        container.style.height = viewport.height + 'px';
-
-        await page.render({ canvasContext: context, viewport: viewport }).promise;
-      } catch (err) {
-        console.warn("Gagal memuat background PDF. Pastikan file 'template.pdf' ada di folder projek.", err);
-      }
-    }
-
-    // Live update teks & gambar barcode pada preview
-    function updatePreview() {
-      const noKartu = document.getElementById('noKartu').value;
-      document.getElementById('drag-noKartu').innerText = noKartu || 'Nomor Kartu';
-      document.getElementById('drag-nama').innerText = (document.getElementById('nama').value || 'Nama').toUpperCase();
-      document.getElementById('drag-alamat').innerText = (document.getElementById('alamat').value || 'Alamat').toUpperCase();
-      document.getElementById('drag-tglLahir').innerText = document.getElementById('tglLahir').value || 'Tgl Lahir';
-      document.getElementById('drag-nik').innerText = document.getElementById('nik').value || 'NIK';
-      document.getElementById('drag-faskes').innerText = document.getElementById('faskes').value || 'Faskes';
-
-      if (noKartu.trim() !== '') {
-        try {
-          const canvas = document.getElementById('barcodeCanvas');
-          bwipjs.toCanvas(canvas, {
-            bcid: 'code128',
-            text: noKartu,
-            scale: 2,
-            height: 10,
-            includetext: false
-          });
-          document.getElementById('barcodeImgPreview').src = canvas.toDataURL('image/png');
-        } catch (e) {}
-      }
-    }
-
-    // Fungsi Drag and Drop elemen
-    function makeDraggable() {
-      const draggables = document.querySelectorAll('.draggable');
-      const container = document.getElementById('cardContainer');
-
-      draggables.forEach(elem => {
-        let isDragging = false;
-        let offsetObjX = 0, offsetObjY = 0;
-
-        elem.addEventListener('mousedown', (e) => {
-          isDragging = true;
-          offsetObjX = e.clientX - elem.offsetLeft;
-          offsetObjY = e.clientY - elem.offsetTop;
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          let x = e.clientX - offsetObjX;
-          let y = e.clientY - offsetObjY;
-
-          x = Math.max(0, Math.min(x, container.clientWidth - elem.clientWidth));
-          y = Math.max(0, Math.min(y, container.clientHeight - elem.clientHeight));
-
-          elem.style.left = x + 'px';
-          elem.style.top = y + 'px';
-        });
-
-        document.addEventListener('mouseup', () => { isDragging = false; });
-      });
-    }
-
-    // Konversi Posisi Piksel Layar ke Koordinat Asli PDF
-    function getPdfCoordinates(elemId, pageW, pageH) {
-      const container = document.getElementById('cardContainer');
-      const elem = document.getElementById(elemId);
-
-      const scaleX = pageW / container.clientWidth;
-      const scaleY = pageH / container.clientHeight;
-
-      const visualLeft = parseFloat(elem.style.left) || 0;
-      const visualTop = parseFloat(elem.style.top) || 0;
-
-      const pdfX = visualLeft * scaleX;
-      const pdfY = pageH - ((visualTop + elem.clientHeight * 0.75) * scaleY);
-
-      return { x: pdfX, y: pdfY };
-    }
-
-    // Proses Generate & Download PDF
     async function generatePDF() {
+      const noKartu = document.getElementById('noKartu').value.trim();
+      const nama = document.getElementById('nama').value.trim();
+      const alamat = document.getElementById('alamat').value.trim();
+      const tglLahir = document.getElementById('tglLahir').value.trim();
+      const nik = document.getElementById('nik').value.trim();
+      const faskes = document.getElementById('faskes').value.trim();
       const statusDiv = document.getElementById('status');
+
+      if (!noKartu || !nama) {
+        alert('Mohon lengkapi data form!');
+        return;
+      }
+
       statusDiv.style.color = '#00875a';
-      statusDiv.innerText = 'Memproses PDF...';
+      statusDiv.innerText = 'Memproses Kartu PDF...';
 
       try {
+        // 1. Ambil file template.pdf
         const response = await fetch('./template.pdf');
-        if (!response.ok) throw new Error('File template.pdf tidak ditemukan di folder.');
-        
+        if (!response.ok) throw new Error('File template.pdf tidak ditemukan.');
         const pdfArrayBuffer = await response.arrayBuffer();
+
+        // 2. Load PDF & Register Fontkit
         const pdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
+        pdfDoc.registerFontkit(fontkit);
+
+        // 3. Load Font Arial & Arial Bold dari CDN
+        const fontArialBytes = await fetch('https://cdn.jsdelivr.net/npm/@canvas-fonts/arial/arial.ttf').then(res => res.arrayBuffer());
+        const fontArialBoldBytes = await fetch('https://cdn.jsdelivr.net/npm/@canvas-fonts/arial-bold/arial-bold.ttf').then(res => res.arrayBuffer());
+
+        const arialRegular = await pdfDoc.embedFont(fontArialBytes);
+        const arialBold = await pdfDoc.embedFont(fontArialBoldBytes);
+
         const firstPage = pdfDoc.getPages()[0];
-        
-        const { width, height } = firstPage.getSize();
-        const helveticaBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-        const helvetica = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const black = PDFLib.rgb(0, 0, 0);
 
-        const fields = [
-          { id: 'drag-noKartu', val: document.getElementById('noKartu').value, font: helveticaBold, size: 10 },
-          { id: 'drag-nama', val: document.getElementById('nama').value.toUpperCase(), font: helveticaBold, size: 9.5 },
-          { id: 'drag-alamat', val: document.getElementById('alamat').value.toUpperCase(), font: helvetica, size: 7.5 },
-          { id: 'drag-tglLahir', val: document.getElementById('tglLahir').value, font: helvetica, size: 8.5 },
-          { id: 'drag-nik', val: document.getElementById('nik').value, font: helvetica, size: 8.5 },
-          { id: 'drag-faskes', val: document.getElementById('faskes').value, font: helvetica, size: 8.5 }
-        ];
+        // 4. Cetak Teks Sesuai Aturan Font & Ukuran (11 pt)
+        // Posisi X = 135 ditempatkan tepat di sebelah titik dua (:)
+        firstPage.drawText(noKartu,              { x: 135, y: 178, size: 11, font: arialBold,    color: black });
+        firstPage.drawText(nama.toUpperCase(),   { x: 135, y: 161, size: 11, font: arialBold,    color: black });
+        firstPage.drawText(alamat.toUpperCase(), { x: 135, y: 144, size: 11, font: arialRegular, color: black });
+        firstPage.drawText(tglLahir,             { x: 135, y: 127, size: 11, font: arialRegular, color: black });
+        firstPage.drawText(nik,                  { x: 135, y: 110, size: 11, font: arialRegular, color: black });
+        firstPage.drawText(faskes,               { x: 135, y: 93,  size: 11, font: arialRegular, color: black });
 
-        fields.forEach(f => {
-          const pos = getPdfCoordinates(f.id, width, height);
-          firstPage.drawText(f.val, {
-            x: pos.x,
-            y: pos.y,
-            size: f.size,
-            font: f.font,
-            color: PDFLib.rgb(0, 0, 0)
-          });
+        // 5. Generate & Tempel Barcode (Panjang: 3.979 px, Tinggi: 1.246 px)
+        const canvas = document.getElementById('barcodeCanvas');
+        bwipjs.toCanvas(canvas, {
+          bcid: 'code128',
+          text: noKartu,
+          scale: 3,
+          height: 10,
+          includetext: false,
         });
 
-        const barcodePos = getPdfCoordinates('drag-barcode', width, height);
-        const canvas = document.getElementById('barcodeCanvas');
         const barcodeDataUrl = canvas.toDataURL('image/png');
         const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
 
         firstPage.drawImage(barcodeImage, {
-          x: barcodePos.x,
-          y: barcodePos.y,
-          width: 140,
-          height: 30
+          x: 135,
+          y: 60,
+          width: 3.979,
+          height: 1.246,
         });
 
+        // 6. Simpan & Unduh File PDF
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `Kartu_KIS_${document.getElementById('nama').value.replace(/\s+/g, '_')}.pdf`;
+        link.download = `Kartu_KIS_${nama.replace(/\s+/g, '_')}.pdf`;
         link.click();
 
         statusDiv.style.color = 'green';
-        statusDiv.innerText = 'Berhasil diunduh!';
-      } catch (err) {
-        console.error(err);
+        statusDiv.innerText = 'Kartu Berhasil Dibuat!';
+      } catch (error) {
+        console.error(error);
         statusDiv.style.color = 'red';
-        statusDiv.innerText = 'Gagal: ' + err.message;
+        statusDiv.innerText = 'Gagal: ' + error.message;
       }
     }
   </script>
