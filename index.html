@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cetak Kartu PDF & Barcode</title>
+
+  <!-- Library pdf-lib untuk isi PDF -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <!-- Library bwip-js untuk generate barcode batang -->
+  <script src="https://cdn.jsdelivr.net/npm/bwip-js@3.0.4/dist/bwip-js-min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 450px;
+      margin: 40px auto;
+      padding: 25px;
+      background-color: #f4f6f9;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    h2 { text-align: center; color: #333; margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 6px; font-weight: bold; color: #555; }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover { background-color: #0056b3; }
+    #status { margin-top: 15px; text-align: center; font-weight: bold; }
+    #barcodeCanvas { display: none; }
+  </style>
+</head>
+<body>
+
+  <h2>Form Cetak Kartu</h2>
+
+  <form id="cardForm">
+    <div class="form-group">
+      <label for="nama">Nama Lengkap:</label>
+      <input type="text" id="nama" placeholder="Contoh: Budi Santoso" required>
+    </div>
+
+    <div class="form-group">
+      <label for="idNumber">Nomor ID / NIK (Barcode):</label>
+      <input type="text" id="idNumber" placeholder="Contoh: 1234567890" required>
+    </div>
+
+    <button type="button" onclick="generatePDF()">Cetak Kartu PDF</button>
+  </form>
+
+  <div id="status"></div>
+  <canvas id="barcodeCanvas"></canvas>
+
+  <script>
+    async function generatePDF() {
+      const nama = document.getElementById('nama').value.trim();
+      const idNumber = document.getElementById('idNumber').value.trim();
+      const statusDiv = document.getElementById('status');
+
+      if (!nama || !idNumber) {
+        alert('Mohon isi semua kolom!');
+        return;
+      }
+
+      statusDiv.style.color = '#007bff';
+      statusDiv.innerText = 'Memproses PDF...';
+
+      try {
+        // 1. Ambil file template.pdf langsung dari folder repository GitHub
+        const response = await fetch('./template.pdf');
+        if (!response.ok) {
+          throw new Error('File template.pdf tidak ditemukan di server.');
+        }
+        const pdfArrayBuffer = await response.arrayBuffer();
+
+        // 2. Load PDF menggunakan pdf-lib
+        const pdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
+
+        // 3. Tulis Teks Nama ke PDF
+        // Atur posisi X dan Y sesuai layout template kamu (X dari kiri, Y dari bawah)
+        firstPage.drawText(nama, {
+          x: 50,
+          y: 200,
+          size: 14,
+          color: PDFLib.rgb(0, 0, 0),
+        });
+
+        // 4. Generate Barcode Batang (Code 128) ke Canvas
+        const canvas = document.getElementById('barcodeCanvas');
+        bwipjs.toCanvas(canvas, {
+          bcid: 'code128',       // Barcode batang standar
+          text: idNumber,        // Isi barcode
+          scale: 3,
+          height: 10,
+          includetext: true,     // Tampilkan angka di bawah barcode
+          textxalign: 'center',
+        });
+
+        // 5. Masukkan Gambar Barcode ke PDF
+        const barcodeDataUrl = canvas.toDataURL('image/png');
+        const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
+
+        firstPage.drawImage(barcodeImage, {
+          x: 50,          // Posisi X dari kiri
+          y: 120,         // Posisi Y dari bawah
+          width: 150,     // Lebar gambar barcode
+          height: 50,     // Tinggi gambar barcode
+        });
+
+        // 6. Download PDF Hasil
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `Kartu_${nama.replace(/\s+/g, '_')}.pdf`;
+        link.click();
+
+        statusDiv.style.color = 'green';
+        statusDiv.innerText = 'Berhasil diunduh!';
+      } catch (error) {
+        console.error(error);
+        statusDiv.style.color = 'red';
+        statusDiv.innerText = 'Gagal: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
