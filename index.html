@@ -3,64 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cetak Kartu PDF & Barcode</title>
+  <title>Cetak Kartu Indonesia Sehat</title>
 
   <!-- Library pdf-lib untuk isi PDF -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <!-- Library bwip-js untuk generate barcode batang -->
+  <!-- Library bwip-js untuk generate barcode garis -->
   <script src="https://cdn.jsdelivr.net/npm/bwip-js@3.0.4/dist/bwip-js-min.js"></script>
 
   <style>
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 450px;
-      margin: 40px auto;
-      padding: 25px;
+      max-width: 500px;
+      margin: 30px auto;
+      padding: 20px;
       background-color: #f4f6f9;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      border-radius: 10px;
+      border-radius: 8px;
     }
-    h2 { text-align: center; color: #333; margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 6px; font-weight: bold; color: #555; }
+    h2 { text-align: center; color: #00875a; margin-bottom: 20px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; color: #333; font-size: 14px; }
     input[type="text"] {
       width: 100%;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 4px;
       font-size: 14px;
     }
     button {
       width: 100%;
       padding: 12px;
-      background-color: #007bff;
+      background-color: #00875a;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
     }
-    button:hover { background-color: #0056b3; }
+    button:hover { background-color: #006644; }
     #status { margin-top: 15px; text-align: center; font-weight: bold; }
     #barcodeCanvas { display: none; }
   </style>
 </head>
 <body>
 
-  <h2>Form Cetak Kartu</h2>
+  <h2>Form Cetak Kartu KIS</h2>
 
   <form id="cardForm">
     <div class="form-group">
-      <label for="nama">Nama Lengkap:</label>
-      <input type="text" id="nama" placeholder="Contoh: Budi Santoso" required>
+      <label for="noKartu">Nomor Kartu (Barcode):</label>
+      <input type="text" id="noKartu" placeholder="Contoh: 0001031973028" required>
     </div>
 
     <div class="form-group">
-      <label for="idNumber">Nomor ID / NIK (Barcode):</label>
-      <input type="text" id="idNumber" placeholder="Contoh: 1234567890" required>
+      <label for="nama">Nama Lengkap:</label>
+      <input type="text" id="nama" placeholder="Contoh: TARYANTO" required>
+    </div>
+
+    <div class="form-group">
+      <label for="alamat">Alamat:</label>
+      <input type="text" id="alamat" placeholder="Contoh: RANDEGAN 04/03 RANDEGAN, LOSARI" required>
+    </div>
+
+    <div class="form-group">
+      <label for="tglLahir">Tanggal Lahir:</label>
+      <input type="text" id="tglLahir" placeholder="Contoh: 27-08-1952" required>
+    </div>
+
+    <div class="form-group">
+      <label for="nik">NIK:</label>
+      <input type="text" id="nik" placeholder="Contoh: 33291722708520002" required>
+    </div>
+
+    <div class="form-group">
+      <label for="faskes">Faskes Tingkat I:</label>
+      <input type="text" id="faskes" placeholder="Contoh: Bojongsari" required>
     </div>
 
     <button type="button" onclick="generatePDF()">Cetak Kartu PDF</button>
@@ -71,72 +91,77 @@
 
   <script>
     async function generatePDF() {
+      const noKartu = document.getElementById('noKartu').value.trim();
       const nama = document.getElementById('nama').value.trim();
-      const idNumber = document.getElementById('idNumber').value.trim();
+      const alamat = document.getElementById('alamat').value.trim();
+      const tglLahir = document.getElementById('tglLahir').value.trim();
+      const nik = document.getElementById('nik').value.trim();
+      const faskes = document.getElementById('faskes').value.trim();
       const statusDiv = document.getElementById('status');
 
-      if (!nama || !idNumber) {
-        alert('Mohon isi semua kolom!');
+      if (!noKartu || !nama) {
+        alert('Mohon lengkapi data form!');
         return;
       }
 
-      statusDiv.style.color = '#007bff';
-      statusDiv.innerText = 'Memproses PDF...';
+      statusDiv.style.color = '#00875a';
+      statusDiv.innerText = 'Memproses Kartu PDF...';
 
       try {
-        // 1. Ambil file template.pdf langsung dari folder repository GitHub
+        // 1. Ambil file template.pdf dari folder projek
         const response = await fetch('./template.pdf');
         if (!response.ok) {
-          throw new Error('File template.pdf tidak ditemukan di server.');
+          throw new Error('File template.pdf tidak ditemukan.');
         }
         const pdfArrayBuffer = await response.arrayBuffer();
 
-        // 2. Load PDF menggunakan pdf-lib
+        // 2. Load PDF
         const pdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
 
-        // 3. Tulis Teks Nama ke PDF
-        // Atur posisi X dan Y sesuai layout template kamu (X dari kiri, Y dari bawah)
-        firstPage.drawText(nama, {
-          x: 50,
-          y: 200,
-          size: 14,
-          color: PDFLib.rgb(0, 0, 0),
-        });
+        // 3. Menulis Teks Data ke PDF (Sesuaikan nilai X dan Y dengan template)
+        const fontSize = 10;
+        const fontColor = PDFLib.rgb(0, 0, 0);
 
-        // 4. Generate Barcode Batang (Code 128) ke Canvas
+        firstPage.drawText(noKartu,  { x: 140, y: 180, size: fontSize, color: fontColor });
+        firstPage.drawText(nama,     { x: 140, y: 165, size: fontSize, color: fontColor });
+        firstPage.drawText(alamat,   { x: 140, y: 150, size: 8,        color: fontColor });
+        firstPage.drawText(tglLahir, { x: 140, y: 135, size: fontSize, color: fontColor });
+        firstPage.drawText(nik,      { x: 140, y: 120, size: fontSize, color: fontColor });
+        firstPage.drawText(faskes,   { x: 140, y: 105, size: fontSize, color: fontColor });
+
+        // 4. Generate Barcode Garis (Code 128) dari Nomor Kartu
         const canvas = document.getElementById('barcodeCanvas');
         bwipjs.toCanvas(canvas, {
-          bcid: 'code128',       // Barcode batang standar
-          text: idNumber,        // Isi barcode
+          bcid: 'code128',
+          text: noKartu,
           scale: 3,
           height: 10,
-          includetext: true,     // Tampilkan angka di bawah barcode
-          textxalign: 'center',
+          includetext: false, // Set false jika angka nomor kartu sudah dicetak teks biasa
         });
 
-        // 5. Masukkan Gambar Barcode ke PDF
+        // 5. Tempelkan Barcode Garis ke PDF
         const barcodeDataUrl = canvas.toDataURL('image/png');
         const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
 
         firstPage.drawImage(barcodeImage, {
-          x: 50,          // Posisi X dari kiri
-          y: 120,         // Posisi Y dari bawah
-          width: 150,     // Lebar gambar barcode
-          height: 50,     // Tinggi gambar barcode
+          x: 140,         // Posisi X barcode di kartu
+          y: 60,          // Posisi Y barcode di kartu
+          width: 160,     // Lebar barcode
+          height: 35,     // Tinggi barcode
         });
 
-        // 6. Download PDF Hasil
+        // 6. Simpan & Unduh
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `Kartu_${nama.replace(/\s+/g, '_')}.pdf`;
+        link.download = `Kartu_KIS_${nama.replace(/\s+/g, '_')}.pdf`;
         link.click();
 
         statusDiv.style.color = 'green';
-        statusDiv.innerText = 'Berhasil diunduh!';
+        statusDiv.innerText = 'Kartu Berhasil Dibuat!';
       } catch (error) {
         console.error(error);
         statusDiv.style.color = 'red';
