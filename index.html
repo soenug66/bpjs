@@ -55,32 +55,32 @@
   <form id="cardForm">
     <div class="form-group">
       <label for="noKartu">Nomor Kartu (Barcode):</label>
-      <input type="text" id="noKartu" value="0001031973028" placeholder="Contoh: 0001031973028" required>
+      <input type="text" id="noKartu" value="0001031973028" required>
     </div>
 
     <div class="form-group">
       <label for="nama">Nama Lengkap:</label>
-      <input type="text" id="nama" value="TARYANTO" placeholder="Contoh: TARYANTO" required>
+      <input type="text" id="nama" value="TARYANTO" required>
     </div>
 
     <div class="form-group">
       <label for="alamat">Alamat:</label>
-      <input type="text" id="alamat" value="RANDEGAN 04/03 RANDEGAN, LOSARI" placeholder="Contoh: RANDEGAN 04/03 RANDEGAN, LOSARI" required>
+      <input type="text" id="alamat" value="RANDEGAN 04/03 RANDEGAN, LOSARI" required>
     </div>
 
     <div class="form-group">
       <label for="tglLahir">Tanggal Lahir:</label>
-      <input type="text" id="tglLahir" value="27-08-1952" placeholder="Contoh: 27-08-1952" required>
+      <input type="text" id="tglLahir" value="27-08-1952" required>
     </div>
 
     <div class="form-group">
       <label for="nik">NIK:</label>
-      <input type="text" id="nik" value="33291722708520002" placeholder="Contoh: 33291722708520002" required>
+      <input type="text" id="nik" value="33291722708520002" required>
     </div>
 
     <div class="form-group">
       <label for="faskes">Faskes Tingkat I:</label>
-      <input type="text" id="faskes" value="Bojongsari" placeholder="Contoh: Bojongsari" required>
+      <input type="text" id="faskes" value="Bojongsari" required>
     </div>
 
     <button type="button" onclick="generatePDF()">Cetak Kartu PDF</button>
@@ -108,51 +108,49 @@
       statusDiv.innerText = 'Memproses Kartu PDF...';
 
       try {
-        // 1. Ambil file template.pdf
         const response = await fetch('./template.pdf');
         if (!response.ok) throw new Error('File template.pdf tidak ditemukan.');
         const pdfArrayBuffer = await response.arrayBuffer();
 
-        // 2. Load PDF
         const pdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
-
-        // 3. Embed Standard Sans-Serif Font (Padanan Arial yang stabil tanpa error)
         const fontRegular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
         const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
 
         const firstPage = pdfDoc.getPages()[0];
         const black = PDFLib.rgb(0, 0, 0);
 
-        // 4. Cetak Teks Sesuai Aturan Font & Ukuran (11 pt)
-        // Posisi X = 135 ditempatkan tepat di sebelah titik dua (:)
-        firstPage.drawText(noKartu,              { x: 135, y: 178, size: 11, font: fontBold,    color: black });
-        firstPage.drawText(nama.toUpperCase(),   { x: 135, y: 161, size: 11, font: fontBold,    color: black });
-        firstPage.drawText(alamat.toUpperCase(), { x: 135, y: 144, size: 11, font: fontRegular, color: black });
-        firstPage.drawText(tglLahir,             { x: 135, y: 127, size: 11, font: fontRegular, color: black });
-        firstPage.drawText(nik,                  { x: 135, y: 110, size: 11, font: fontRegular, color: black });
-        firstPage.drawText(faskes,               { x: 135, y: 93,  size: 11, font: fontRegular, color: black });
+        // --- PENYESUAIAN JENIS HURUF, KETEBALAN & POSISI ---
+        // X = 132 (Di sebelah titik dua :)
+        // Y dihitung dari BAWAH kertas ke ATAS (satuan PDF pt)
+        firstPage.drawText(noKartu,              { x: 132, y: 132, size: 9.5, font: fontBold,    color: black });
+        firstPage.drawText(nama.toUpperCase(),   { x: 132, y: 118, size: 9,   font: fontBold,    color: black });
+        firstPage.drawText(alamat.toUpperCase(), { x: 132, y: 104, size: 7.5, font: fontRegular, color: black });
+        firstPage.drawText(tglLahir,             { x: 132, y: 90,  size: 8.5, font: fontRegular, color: black });
+        firstPage.drawText(nik,                  { x: 132, y: 76,  size: 8.5, font: fontRegular, color: black });
+        firstPage.drawText(faskes,               { x: 132, y: 62,  size: 8.5, font: fontRegular, color: black });
 
-        // 5. Generate & Tempel Barcode (Panjang: 3.979 px, Tinggi: 1.246 px)
+        // --- GENERATE BARCODE (732 px x 88 px) ---
         const canvas = document.getElementById('barcodeCanvas');
         bwipjs.toCanvas(canvas, {
           bcid: 'code128',
           text: noKartu,
-          scale: 3,
-          height: 10,
+          width: 732 / 10,   // Skala lebar resolusi canvas (732px)
+          height: 88 / 10,   // Skala tinggi resolusi canvas (88px)
           includetext: false,
         });
 
         const barcodeDataUrl = canvas.toDataURL('image/png');
         const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
 
+        // Konversi rasio 732px x 88px ke skala cetak PDF
+        // Lebar: ~135 pt, Tinggi: ~16 pt (Menjaga rasio presisi 732:88)
         firstPage.drawImage(barcodeImage, {
-          x: 135,
-          y: 60,
-          width: 3.979,
-          height: 1.246,
+          x: 132,       
+          y: 36,        
+          width: 135,   
+          height: 16.2, 
         });
 
-        // 6. Simpan & Unduh File PDF
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
