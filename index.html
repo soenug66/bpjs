@@ -119,34 +119,44 @@
         const firstPage = pdfDoc.getPages()[0];
         const black = PDFLib.rgb(0, 0, 0);
 
-        // --- PENYESUAIAN JENIS HURUF, KETEBALAN & POSISI ---
-        // X = 132 (Di sebelah titik dua :)
-        // Y dihitung dari BAWAH kertas ke ATAS (satuan PDF pt)
-        firstPage.drawText(noKartu,              { x: 132, y: 132, size: 9.5, font: fontBold,    color: black });
-        firstPage.drawText(nama.toUpperCase(),   { x: 132, y: 118, size: 9,   font: fontBold,    color: black });
-        firstPage.drawText(alamat.toUpperCase(), { x: 132, y: 104, size: 7.5, font: fontRegular, color: black });
-        firstPage.drawText(tglLahir,             { x: 132, y: 90,  size: 8.5, font: fontRegular, color: black });
-        firstPage.drawText(nik,                  { x: 132, y: 76,  size: 8.5, font: fontRegular, color: black });
-        firstPage.drawText(faskes,               { x: 132, y: 62,  size: 8.5, font: fontRegular, color: black });
+        // --- KOORDINAT PRESISI (Sistem Koordinat PDF: Y dihitung dari BAWAH) ---
+        // X = 138 (Jarak pas dari pinggir kiri, menimpa persis di sebelah titik dua)
+        
+        // 1. Nomor Kartu (Helvetica Bold, 11 pt)
+        firstPage.drawText(noKartu, { x: 138, y: 128, size: 11, font: fontBold, color: black });
+
+        // 2. Nama Lengkap (Helvetica Bold, 11 pt)
+        firstPage.drawText(nama.toUpperCase(), { x: 138, y: 112, size: 11, font: fontBold, color: black });
+
+        // 3. Alamat (Helvetica Regular, 11 pt)
+        firstPage.drawText(alamat.toUpperCase(), { x: 138, y: 96, size: 11, font: fontRegular, color: black });
+
+        // 4. Tanggal Lahir (Helvetica Regular, 11 pt)
+        firstPage.drawText(tglLahir, { x: 138, y: 80, size: 11, font: fontRegular, color: black });
+
+        // 5. NIK (Helvetica Regular, 11 pt)
+        firstPage.drawText(nik, { x: 138, y: 64, size: 11, font: fontRegular, color: black });
+
+        // 6. Faskes Tingkat I (Helvetica Regular, 11 pt)
+        firstPage.drawText(faskes, { x: 138, y: 48, size: 11, font: fontRegular, color: black });
 
         // --- GENERATE BARCODE (732 px x 88 px) ---
         const canvas = document.getElementById('barcodeCanvas');
         bwipjs.toCanvas(canvas, {
           bcid: 'code128',
           text: noKartu,
-          width: 732 / 10,   // Skala lebar resolusi canvas (732px)
-          height: 88 / 10,   // Skala tinggi resolusi canvas (88px)
+          width: 732 / 10,
+          height: 88 / 10,
           includetext: false,
         });
 
         const barcodeDataUrl = canvas.toDataURL('image/png');
         const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
 
-        // Konversi rasio 732px x 88px ke skala cetak PDF
-        // Lebar: ~135 pt, Tinggi: ~16 pt (Menjaga rasio presisi 732:88)
+        // Posisi Barcode berada tepat di bawah tulisan Faskes
         firstPage.drawImage(barcodeImage, {
-          x: 132,       
-          y: 36,        
+          x: 138,       
+          y: 22,        
           width: 135,   
           height: 16.2, 
         });
