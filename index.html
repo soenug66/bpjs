@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cetak Kartu Indonesia Sehat</title>
+  <title>Cetak Kartu KIS - Custom Koordinat</title>
 
   <!-- Library pdf-lib untuk PDF -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -14,23 +14,59 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
-      max-width: 480px;
-      margin: 30px auto;
-      padding: 25px;
+      max-width: 650px;
+      margin: 20px auto;
+      padding: 20px;
       background-color: #f4f6f9;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      border-radius: 8px;
     }
-    h2 { text-align: center; color: #00875a; margin-bottom: 20px; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; margin-bottom: 4px; font-weight: bold; color: #333; font-size: 14px; }
-    input[type="text"] {
-      width: 100%;
-      padding: 8px 10px;
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 { text-align: center; color: #00875a; margin-top: 0; }
+    
+    .grid-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .grid-row label {
+      width: 120px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+    .grid-row input[type="text"] {
+      flex: 2;
+      padding: 6px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      font-size: 14px;
     }
+    .coord-box {
+      display: flex;
+      gap: 5px;
+      flex: 1.5;
+    }
+    .coord-box input[type="number"] {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #00875a;
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: center;
+    }
+    
+    .section-title {
+      font-weight: bold;
+      background: #e6f4ea;
+      padding: 6px 10px;
+      margin: 15px 0 10px 0;
+      border-left: 4px solid #00875a;
+      font-size: 13px;
+    }
+
     button {
       width: 100%;
       padding: 12px;
@@ -41,7 +77,7 @@
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 15px;
     }
     button:hover { background-color: #006644; }
     #status { margin-top: 15px; text-align: center; font-weight: bold; }
@@ -50,60 +86,107 @@
 </head>
 <body>
 
-  <h2>Form Cetak Kartu KIS</h2>
+  <div class="card">
+    <h2>Pengaturan Data & Koordinat PDF</h2>
 
-  <form id="cardForm">
-    <div class="form-group">
-      <label for="noKartu">Nomor Kartu (Barcode):</label>
-      <input type="text" id="noKartu" value="0001031973028" required>
-    </div>
+    <form id="cardForm">
+      <div class="section-title">Isi Data & Atur Koordinat (X, Y, Size)</div>
 
-    <div class="form-group">
-      <label for="nama">Nama Lengkap:</label>
-      <input type="text" id="nama" value="TARYANTO" required>
-    </div>
+      <!-- Header Kolom -->
+      <div class="grid-row" style="font-weight: bold; font-size: 11px; color: #666;">
+        <span style="width: 120px;">Field</span>
+        <span style="flex: 2;">Nilai Teks</span>
+        <span style="flex: 1.5; text-align: center;">X | Y | Size</span>
+      </div>
 
-    <div class="form-group">
-      <label for="alamat">Alamat:</label>
-      <input type="text" id="alamat" value="RANDEGAN 04/03 RANDEGAN, LOSARI" required>
-    </div>
+      <!-- No Kartu -->
+      <div class="grid-row">
+        <label>No Kartu:</label>
+        <input type="text" id="noKartu" value="0001031973028">
+        <div class="coord-box">
+          <input type="number" id="x_noKartu" value="138" title="Posisi X">
+          <input type="number" id="y_noKartu" value="128" title="Posisi Y">
+          <input type="number" id="s_noKartu" value="11" title="Ukuran Font">
+        </div>
+      </div>
 
-    <div class="form-group">
-      <label for="tglLahir">Tanggal Lahir:</label>
-      <input type="text" id="tglLahir" value="27-08-1952" required>
-    </div>
+      <!-- Nama -->
+      <div class="grid-row">
+        <label>Nama:</label>
+        <input type="text" id="nama" value="TARYANTO">
+        <div class="coord-box">
+          <input type="number" id="x_nama" value="138" title="Posisi X">
+          <input type="number" id="y_nama" value="112" title="Posisi Y">
+          <input type="number" id="s_nama" value="11" title="Ukuran Font">
+        </div>
+      </div>
 
-    <div class="form-group">
-      <label for="nik">NIK:</label>
-      <input type="text" id="nik" value="33291722708520002" required>
-    </div>
+      <!-- Alamat -->
+      <div class="grid-row">
+        <label>Alamat:</label>
+        <input type="text" id="alamat" value="RANDEGAN 04/03 RANDEGAN, LOSARI">
+        <div class="coord-box">
+          <input type="number" id="x_alamat" value="138" title="Posisi X">
+          <input type="number" id="y_alamat" value="96" title="Posisi Y">
+          <input type="number" id="s_alamat" value="11" title="Ukuran Font">
+        </div>
+      </div>
 
-    <div class="form-group">
-      <label for="faskes">Faskes Tingkat I:</label>
-      <input type="text" id="faskes" value="Bojongsari" required>
-    </div>
+      <!-- Tanggal Lahir -->
+      <div class="grid-row">
+        <label>Tgl Lahir:</label>
+        <input type="text" id="tglLahir" value="27-08-1952">
+        <div class="coord-box">
+          <input type="number" id="x_tglLahir" value="138" title="Posisi X">
+          <input type="number" id="y_tglLahir" value="80" title="Posisi Y">
+          <input type="number" id="s_tglLahir" value="11" title="Ukuran Font">
+        </div>
+      </div>
 
-    <button type="button" onclick="generatePDF()">Cetak Kartu PDF</button>
-  </form>
+      <!-- NIK -->
+      <div class="grid-row">
+        <label>NIK:</label>
+        <input type="text" id="nik" value="33291722708520002">
+        <div class="coord-box">
+          <input type="number" id="x_nik" value="138" title="Posisi X">
+          <input type="number" id="y_nik" value="64" title="Posisi Y">
+          <input type="number" id="s_nik" value="11" title="Ukuran Font">
+        </div>
+      </div>
 
-  <div id="status"></div>
+      <!-- Faskes -->
+      <div class="grid-row">
+        <label>Faskes I:</label>
+        <input type="text" id="faskes" value="Bojongsari">
+        <div class="coord-box">
+          <input type="number" id="x_faskes" value="138" title="Posisi X">
+          <input type="number" id="y_faskes" value="48" title="Posisi Y">
+          <input type="number" id="s_faskes" value="11" title="Ukuran Font">
+        </div>
+      </div>
+
+      <!-- Barcode -->
+      <div class="grid-row">
+        <label>Barcode:</label>
+        <span style="flex: 2; font-size: 11px; color: #666;">(Mengikuti No Kartu)</span>
+        <div class="coord-box">
+          <input type="number" id="x_barcode" value="138" title="Posisi X Barcode">
+          <input type="number" id="y_barcode" value="22" title="Posisi Y Barcode">
+          <input type="number" id="w_barcode" value="135" title="Lebar Barcode">
+        </div>
+      </div>
+
+      <button type="button" onclick="generatePDF()">Cetak Kartu PDF</button>
+    </form>
+
+    <div id="status"></div>
+  </div>
+
   <canvas id="barcodeCanvas"></canvas>
 
   <script>
     async function generatePDF() {
-      const noKartu = document.getElementById('noKartu').value.trim();
-      const nama = document.getElementById('nama').value.trim();
-      const alamat = document.getElementById('alamat').value.trim();
-      const tglLahir = document.getElementById('tglLahir').value.trim();
-      const nik = document.getElementById('nik').value.trim();
-      const faskes = document.getElementById('faskes').value.trim();
       const statusDiv = document.getElementById('status');
-
-      if (!noKartu || !nama) {
-        alert('Mohon lengkapi data form!');
-        return;
-      }
-
       statusDiv.style.color = '#00875a';
       statusDiv.innerText = 'Memproses Kartu PDF...';
 
@@ -119,53 +202,66 @@
         const firstPage = pdfDoc.getPages()[0];
         const black = PDFLib.rgb(0, 0, 0);
 
-        // --- KOORDINAT PRESISI (Sistem Koordinat PDF: Y dihitung dari BAWAH) ---
-        // X = 138 (Jarak pas dari pinggir kiri, menimpa persis di sebelah titik dua)
-        
-        // 1. Nomor Kartu (Helvetica Bold, 11 pt)
-        firstPage.drawText(noKartu, { x: 138, y: 128, size: 11, font: fontBold, color: black });
+        // Helper untuk mengambil nilai input
+        const getVal = (id) => document.getElementById(id).value.trim();
+        const getNum = (id) => parseFloat(document.getElementById(id).value) || 0;
 
-        // 2. Nama Lengkap (Helvetica Bold, 11 pt)
-        firstPage.drawText(nama.toUpperCase(), { x: 138, y: 112, size: 11, font: fontBold, color: black });
-
-        // 3. Alamat (Helvetica Regular, 11 pt)
-        firstPage.drawText(alamat.toUpperCase(), { x: 138, y: 96, size: 11, font: fontRegular, color: black });
-
-        // 4. Tanggal Lahir (Helvetica Regular, 11 pt)
-        firstPage.drawText(tglLahir, { x: 138, y: 80, size: 11, font: fontRegular, color: black });
-
-        // 5. NIK (Helvetica Regular, 11 pt)
-        firstPage.drawText(nik, { x: 138, y: 64, size: 11, font: fontRegular, color: black });
-
-        // 6. Faskes Tingkat I (Helvetica Regular, 11 pt)
-        firstPage.drawText(faskes, { x: 138, y: 48, size: 11, font: fontRegular, color: black });
-
-        // --- GENERATE BARCODE (732 px x 88 px) ---
-        const canvas = document.getElementById('barcodeCanvas');
-        bwipjs.toCanvas(canvas, {
-          bcid: 'code128',
-          text: noKartu,
-          width: 732 / 10,
-          height: 88 / 10,
-          includetext: false,
+        // Cetak Teks berdasarkan Koordinat Input User
+        firstPage.drawText(getVal('noKartu'), {
+          x: getNum('x_noKartu'), y: getNum('y_noKartu'), size: getNum('s_noKartu'), font: fontBold, color: black
         });
 
-        const barcodeDataUrl = canvas.toDataURL('image/png');
-        const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
-
-        // Posisi Barcode berada tepat di bawah tulisan Faskes
-        firstPage.drawImage(barcodeImage, {
-          x: 138,       
-          y: 22,        
-          width: 135,   
-          height: 16.2, 
+        firstPage.drawText(getVal('nama').toUpperCase(), {
+          x: getNum('x_nama'), y: getNum('y_nama'), size: getNum('s_nama'), font: fontBold, color: black
         });
+
+        firstPage.drawText(getVal('alamat').toUpperCase(), {
+          x: getNum('x_alamat'), y: getNum('y_alamat'), size: getNum('s_alamat'), font: fontRegular, color: black
+        });
+
+        firstPage.drawText(getVal('tglLahir'), {
+          x: getNum('x_tglLahir'), y: getNum('y_tglLahir'), size: getNum('s_tglLahir'), font: fontRegular, color: black
+        });
+
+        firstPage.drawText(getVal('nik'), {
+          x: getNum('x_nik'), y: getNum('y_nik'), size: getNum('s_nik'), font: fontRegular, color: black
+        });
+
+        firstPage.drawText(getVal('faskes'), {
+          x: getNum('x_faskes'), y: getNum('y_faskes'), size: getNum('s_faskes'), font: fontRegular, color: black
+        });
+
+        // Generate Barcode
+        const noKartu = getVal('noKartu');
+        if (noKartu) {
+          const canvas = document.getElementById('barcodeCanvas');
+          bwipjs.toCanvas(canvas, {
+            bcid: 'code128',
+            text: noKartu,
+            width: 732 / 10,
+            height: 88 / 10,
+            includetext: false,
+          });
+
+          const barcodeDataUrl = canvas.toDataURL('image/png');
+          const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
+
+          const wBarcode = getNum('w_barcode');
+          const hBarcode = wBarcode * (88 / 732); // Menjaga rasio tinggi barcode
+
+          firstPage.drawImage(barcodeImage, {
+            x: getNum('x_barcode'),
+            y: getNum('y_barcode'),
+            width: wBarcode,
+            height: hBarcode
+          });
+        }
 
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `Kartu_KIS_${nama.replace(/\s+/g, '_')}.pdf`;
+        link.download = `Kartu_KIS_${getVal('nama').replace(/\s+/g, '_')}.pdf`;
         link.click();
 
         statusDiv.style.color = 'green';
