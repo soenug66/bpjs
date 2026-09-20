@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cetak Kartu Indonesia Sehat</title>
 
-  <!-- Library pdf-lib & fontkit untuk custom font Arial -->
+  <!-- Library pdf-lib untuk PDF -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
   <!-- Library bwip-js untuk Barcode -->
   <script src="https://cdn.jsdelivr.net/npm/bwip-js@3.0.4/dist/bwip-js-min.js"></script>
 
@@ -114,28 +113,24 @@
         if (!response.ok) throw new Error('File template.pdf tidak ditemukan.');
         const pdfArrayBuffer = await response.arrayBuffer();
 
-        // 2. Load PDF & Register Fontkit
+        // 2. Load PDF
         const pdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
-        pdfDoc.registerFontkit(fontkit);
 
-        // 3. Load Font Arial & Arial Bold dari CDN
-        const fontArialBytes = await fetch('https://cdn.jsdelivr.net/npm/@canvas-fonts/arial/arial.ttf').then(res => res.arrayBuffer());
-        const fontArialBoldBytes = await fetch('https://cdn.jsdelivr.net/npm/@canvas-fonts/arial-bold/arial-bold.ttf').then(res => res.arrayBuffer());
-
-        const arialRegular = await pdfDoc.embedFont(fontArialBytes);
-        const arialBold = await pdfDoc.embedFont(fontArialBoldBytes);
+        // 3. Embed Standard Sans-Serif Font (Padanan Arial yang stabil tanpa error)
+        const fontRegular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
 
         const firstPage = pdfDoc.getPages()[0];
         const black = PDFLib.rgb(0, 0, 0);
 
         // 4. Cetak Teks Sesuai Aturan Font & Ukuran (11 pt)
         // Posisi X = 135 ditempatkan tepat di sebelah titik dua (:)
-        firstPage.drawText(noKartu,              { x: 135, y: 178, size: 11, font: arialBold,    color: black });
-        firstPage.drawText(nama.toUpperCase(),   { x: 135, y: 161, size: 11, font: arialBold,    color: black });
-        firstPage.drawText(alamat.toUpperCase(), { x: 135, y: 144, size: 11, font: arialRegular, color: black });
-        firstPage.drawText(tglLahir,             { x: 135, y: 127, size: 11, font: arialRegular, color: black });
-        firstPage.drawText(nik,                  { x: 135, y: 110, size: 11, font: arialRegular, color: black });
-        firstPage.drawText(faskes,               { x: 135, y: 93,  size: 11, font: arialRegular, color: black });
+        firstPage.drawText(noKartu,              { x: 135, y: 178, size: 11, font: fontBold,    color: black });
+        firstPage.drawText(nama.toUpperCase(),   { x: 135, y: 161, size: 11, font: fontBold,    color: black });
+        firstPage.drawText(alamat.toUpperCase(), { x: 135, y: 144, size: 11, font: fontRegular, color: black });
+        firstPage.drawText(tglLahir,             { x: 135, y: 127, size: 11, font: fontRegular, color: black });
+        firstPage.drawText(nik,                  { x: 135, y: 110, size: 11, font: fontRegular, color: black });
+        firstPage.drawText(faskes,               { x: 135, y: 93,  size: 11, font: fontRegular, color: black });
 
         // 5. Generate & Tempel Barcode (Panjang: 3.979 px, Tinggi: 1.246 px)
         const canvas = document.getElementById('barcodeCanvas');
