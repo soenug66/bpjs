@@ -128,7 +128,7 @@
         <div class="coord-box">
           <input type="number" id="x_alamat" value="138" title="Posisi X">
           <input type="number" id="y_alamat" value="96" title="Posisi Y">
-          <input type="number" id="s_alamat" value="11" title="Ukuran Font">
+          <input type="number" id="s_alamat" value="10" title="Ukuran Font">
         </div>
       </div>
 
@@ -168,11 +168,11 @@
       <!-- Barcode -->
       <div class="grid-row">
         <label>Barcode:</label>
-        <span style="flex: 2; font-size: 11px; color: #666;">(Mengikuti No Kartu)</span>
+        <span style="flex: 2; font-size: 11px; color: #666;">(700 px × 68 px)</span>
         <div class="coord-box">
           <input type="number" id="x_barcode" value="138" title="Posisi X Barcode">
           <input type="number" id="y_barcode" value="22" title="Posisi Y Barcode">
-          <input type="number" id="w_barcode" value="135" title="Lebar Barcode">
+          <input type="number" id="w_barcode" value="130" title="Lebar Barcode di PDF">
         </div>
       </div>
 
@@ -202,11 +202,10 @@
         const firstPage = pdfDoc.getPages()[0];
         const black = PDFLib.rgb(0, 0, 0);
 
-        // Helper untuk mengambil nilai input
         const getVal = (id) => document.getElementById(id).value.trim();
         const getNum = (id) => parseFloat(document.getElementById(id).value) || 0;
 
-        // Cetak Teks berdasarkan Koordinat Input User
+        // Cetak teks sesuai titik koordinat contoh PDF
         firstPage.drawText(getVal('noKartu'), {
           x: getNum('x_noKartu'), y: getNum('y_noKartu'), size: getNum('s_noKartu'), font: fontBold, color: black
         });
@@ -231,15 +230,19 @@
           x: getNum('x_faskes'), y: getNum('y_faskes'), size: getNum('s_faskes'), font: fontRegular, color: black
         });
 
-        // Generate Barcode
+        // Generate Barcode dengan dimensi 700 px x 68 px
         const noKartu = getVal('noKartu');
         if (noKartu) {
           const canvas = document.getElementById('barcodeCanvas');
+          
+          const barcodePixelWidth = 700;
+          const barcodePixelHeight = 68;
+
           bwipjs.toCanvas(canvas, {
             bcid: 'code128',
             text: noKartu,
-            width: 732 / 10,
-            height: 88 / 10,
+            width: barcodePixelWidth / 10,
+            height: barcodePixelHeight / 10,
             includetext: false,
           });
 
@@ -247,7 +250,7 @@
           const barcodeImage = await pdfDoc.embedPng(barcodeDataUrl);
 
           const wBarcode = getNum('w_barcode');
-          const hBarcode = wBarcode * (88 / 732); // Menjaga rasio tinggi barcode
+          const hBarcode = wBarcode * (barcodePixelHeight / barcodePixelWidth);
 
           firstPage.drawImage(barcodeImage, {
             x: getNum('x_barcode'),
